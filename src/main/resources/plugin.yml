@@ -1,0 +1,11 @@
+name: PlasmoRadio
+version: '0.1'
+main: org.ferrum.plasmoRadio.PlasmoRadio
+api-version: 1.21
+
+commands:
+  test:  # <- имя команды (должно совпадать с getCommand("radiocommand"))
+    description: "Управление радио"
+
+depend:
+  - PlasmoVoice
