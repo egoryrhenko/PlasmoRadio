@@ -4,8 +4,12 @@ main: org.ferrum.plasmoRadio.PlasmoRadio
 api-version: 1.21
 
 commands:
-  test:  # <- имя команды (должно совпадать с getCommand("radiocommand"))
+  test:
     description: "Управление радио"
+    usage: /test
+  anvil:
+    description: "хухйху"
+    usage: /anvil
 
 depend:
   - PlasmoVoice

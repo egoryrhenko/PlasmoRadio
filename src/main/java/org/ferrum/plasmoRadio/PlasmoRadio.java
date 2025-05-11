@@ -1,7 +1,9 @@
 package org.ferrum.plasmoRadio;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.ferrum.plasmoRadio.command.SpeakRadioCommand;
 import org.ferrum.plasmoRadio.command.Test2;
+import org.ferrum.plasmoRadio.listeners.InventoryClickListener;
 import su.plo.voice.api.server.PlasmoVoiceServer;
 
 import java.util.logging.Logger;
@@ -17,7 +19,9 @@ public final class PlasmoRadio extends JavaPlugin {
     public void onEnable() {
         logger = getLogger();
         getCommand("test").setExecutor(new Test2());
+        getCommand("anvil").setExecutor(new SpeakRadioCommand());
         getServer().getPluginManager().registerEvents(new BlockPlaceListener(), this);
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(), this);
     }
 
     @Override
