@@ -1,19 +1,14 @@
 package org.ferrum.plasmoRadio.utils;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.type.Skull;
 import org.ferrum.plasmoRadio.RadioAddon;
 import su.plo.slib.api.server.position.ServerPos3d;
 import su.plo.slib.api.server.world.McServerWorld;
-import su.plo.voice.api.server.PlasmoVoiceServer;
-import su.plo.voice.api.server.audio.line.ServerSourceLine;
+import su.plo.voice.api.server.audio.source.ServerAudioSource;
 import su.plo.voice.api.server.audio.source.ServerStaticSource;
-import su.plo.voice.api.server.player.VoicePlayer;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.UUID;
 
 public class Speaker {
@@ -22,7 +17,8 @@ public class Speaker {
     public ServerPos3d pos3d;
     public float frequency;
 
-    HashMap<VoicePlayer, ServerStaticSource> sourceByPlayer = new HashMap<>();
+    public HashMap<UUID, ServerStaticSource> sourceByUUID = new HashMap<>();
+    public static HashSet<ServerStaticSource> sourcesList = new HashSet<>();
 
     public Speaker(Location location) {
         this.location = location;
@@ -34,22 +30,25 @@ public class Speaker {
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("World not found"));
 
-        this.pos3d = new ServerPos3d(world, location.x(),location.y(),location.z());
+        this.pos3d = new ServerPos3d(world, location.x() + 0.5d,location.y() + .5d,location.z() + .5d);
         test();
     }
 
-    public ServerStaticSource getSource(VoicePlayer player) {
-        ServerStaticSource staticSource = sourceByPlayer.get(player);
+    public ServerStaticSource getSource(UUID uuid) {
+        ServerStaticSource staticSource = sourceByUUID.get(uuid);
         if (staticSource == null) {
             staticSource = RadioAddon.sourceLine.createStaticSource(pos3d,false);
-            sourceByPlayer.put(player, staticSource);
+            sourceByUUID.put(uuid, staticSource);
+            sourcesList.add(staticSource);
         }
         return staticSource;
     }
 
-    public void removeSource(VoicePlayer player) {
-        getSource(player).remove();
-        sourceByPlayer.remove(player);
+    public void removeSource(UUID uuid) {
+        ServerStaticSource source = getSource(uuid);
+        source.remove();
+        sourceByUUID.remove(uuid);
+        sourcesList.add(source);
     }
 
     public void test() {
@@ -66,9 +65,9 @@ public class Speaker {
                 microphone.speakers.remove(this);
             }
         }
-        sourceByPlayer.values().forEach(
-                (s) -> s.remove()
+        sourceByUUID.values().forEach(
+                ServerAudioSource::remove
         );
-        sourceByPlayer.clear();
+        sourceByUUID.clear();
     }
 }

@@ -10,6 +10,8 @@ commands:
   anvil:
     description: "хухйху"
     usage: /anvil
+  change:
+    description: "da"
 
 depend:
   - PlasmoVoice

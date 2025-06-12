@@ -1,5 +1,6 @@
 package org.ferrum.plasmoRadio.utils;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 import java.util.HashSet;
@@ -17,6 +18,7 @@ public class Microphone {
     public HashSet<Speaker> speakers = new HashSet<>();
 
     public void test() {
+        speakers.clear();
         for (Speaker speaker : RadioManager.speakers.values()) {
             if (speaker.frequency == frequency) {
                 speakers.add(speaker);
