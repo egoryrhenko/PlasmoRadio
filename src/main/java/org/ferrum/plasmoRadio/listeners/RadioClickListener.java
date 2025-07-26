@@ -1,19 +1,19 @@
 package org.ferrum.plasmoRadio.listeners;
 
 import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.ferrum.plasmoRadio.utils.Microphone;
+import org.ferrum.plasmoRadio.blocks.Locator;
+import org.ferrum.plasmoRadio.blocks.Microphone;
+import org.ferrum.plasmoRadio.blocks.RadioBlock;
 import org.ferrum.plasmoRadio.utils.PlayerUtils;
-import org.ferrum.plasmoRadio.utils.RadioManager;
-import org.ferrum.plasmoRadio.utils.Speaker;
+import org.ferrum.plasmoRadio.RadioManager;
+import org.ferrum.plasmoRadio.blocks.Speaker;
+import org.ferrum.plasmoRadio.utils.RadioDeviceRegistry;
 
 import java.text.DecimalFormat;
-import java.util.Locale;
 import java.util.Objects;
 
 public class RadioClickListener implements Listener {
@@ -24,28 +24,25 @@ public class RadioClickListener implements Listener {
             return;
         }
 
-        Location clickLoc = Objects.requireNonNull(event.getClickedBlock()).getLocation();
+        RadioBlock radioBlock = RadioDeviceRegistry.get(Objects.requireNonNull(event.getClickedBlock()).getLocation());
 
-        if (RadioManager.microphones.containsKey(clickLoc)) {
-            Microphone microphone = RadioManager.microphones.get(clickLoc);
-
-            PlayerUtils.openFrequencyMenu(event.getPlayer(), toString(microphone.frequency), (frequency -> {
-                microphone.frequency = frequency;
-                microphone.test();
-            }));
-
+        if (radioBlock == null) {
+            return;
         }
-        if (RadioManager.speakers.containsKey(clickLoc)) {
-            Speaker speaker = RadioManager.speakers.get(clickLoc);
 
-            PlayerUtils.openFrequencyMenu(event.getPlayer(), toString(speaker.frequency), (frequency -> {
-                speaker.frequency = frequency;
-                speaker.test();
-            }));
-
+        if (!event.getPlayer().isSneaking()) {
+            if (radioBlock instanceof Locator locator) {
+                locator.openMenu(event.getPlayer());
+            }
+            return;
         }
 
 
+
+        PlayerUtils.openFrequencyMenu(event.getPlayer(), toString(radioBlock.frequency), (frequency -> {
+            radioBlock.frequency = frequency;
+            radioBlock.update();
+        }));
     }
 
     public static String toString(float value) {

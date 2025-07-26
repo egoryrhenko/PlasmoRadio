@@ -1,27 +1,19 @@
-package org.ferrum.plasmoRadio.utils;
+package org.ferrum.plasmoRadio;
 
-import be.tarsos.dsp.AudioDispatcher;
-import be.tarsos.dsp.AudioEvent;
-import be.tarsos.dsp.AudioProcessor;
-import be.tarsos.dsp.filters.BandPass;
-import be.tarsos.dsp.io.jvm.AudioDispatcherFactory;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.ferrum.plasmoRadio.PlasmoRadio;
-import org.ferrum.plasmoRadio.RadioAddon;
+import org.ferrum.plasmoRadio.blocks.Microphone;
+import org.ferrum.plasmoRadio.blocks.RadioBlock;
+import org.ferrum.plasmoRadio.blocks.Speaker;
+import org.ferrum.plasmoRadio.utils.RadioDeviceRegistry;
 import su.plo.voice.api.audio.codec.AudioDecoder;
 import su.plo.voice.api.audio.codec.AudioEncoder;
-import su.plo.voice.api.audio.codec.CodecException;
 import su.plo.voice.api.encryption.Encryption;
-import su.plo.voice.api.encryption.EncryptionException;
-import su.plo.voice.api.server.PlasmoVoiceServer;
 import su.plo.voice.api.server.audio.capture.ServerActivation;
 import su.plo.voice.api.server.audio.source.ServerStaticSource;
 import su.plo.voice.proto.packets.udp.clientbound.SourceAudioPacket;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
 import java.util.*;
 
 public class RadioManager {
@@ -30,14 +22,10 @@ public class RadioManager {
     private static AudioDecoder decoder;
     private static AudioEncoder encoder;
 
-
-    public static HashMap<Location, Microphone> microphones = new HashMap<>();
-    public static HashMap<Location, Speaker> speakers = new HashMap<>();
-
     public static void init() {
-        encryption = RadioAddon.getVoiceServer.getDefaultEncryption();
-        decoder = RadioAddon.getVoiceServer.createOpusDecoder(false);
-        encoder = RadioAddon.getVoiceServer.createOpusEncoder(false);
+        //encryption = RadioAddon.getVoiceServer.getDefaultEncryption();
+        //decoder = RadioAddon.getVoiceServer.createOpusDecoder(false);
+        //encoder = RadioAddon.getVoiceServer.createOpusEncoder(false);
 
     }
 
@@ -45,20 +33,13 @@ public class RadioManager {
     public static ServerActivation.PlayerActivationListener onActivation() {
         return (player, packet) -> {
             Location loc = Bukkit.getPlayer(player.getInstance().getUuid()).getLocation();
-            for (Microphone microphone : RadioManager.microphones.values()) {
+            for (Microphone microphone : RadioDeviceRegistry.getMicrophones()) {
+                if (!loc.getWorld().equals(microphone.location.getWorld())) {
+                    continue;
+                }
                 if (loc.distanceSquared(microphone.location) < 4) {
-                    for (Speaker speaker : microphone.speakers) {
-                        ServerStaticSource source = speaker.getSource(player.getInstance().getUuid());
-                        source.sendAudioPacket(
-                                new SourceAudioPacket(
-                                        packet.getSequenceNumber(),
-                                        (byte) source.getState(),
-                                        packet.getData(),
-                                        source.getId(),
-                                        (short) 10
-                                ),
-                                (short) 10
-                        );
+                    for (RadioBlock radioBlock : microphone.devices) {
+                        radioBlock.test(player, packet);
                     }
                 }
 
@@ -69,13 +50,37 @@ public class RadioManager {
 
     public static ServerActivation.PlayerActivationEndListener onActivationEnd() {
         return (player, packet) -> {
-            for (Speaker speaker : RadioManager.speakers.values()) {
+            for (Speaker speaker : RadioDeviceRegistry.getSpeakers()) {
                 speaker.removeSource(player.getInstance().getUuid());
             }
             return ServerActivation.Result.IGNORED;
         };
     }
 
+    public static void unloadChunk(Chunk chunk) {
+        String worldName = chunk.getWorld().getName();
+        int minX = chunk.getX() << 4;
+        int maxX = minX + 15;
+        int minZ = chunk.getZ() << 4;
+        int maxZ = minZ + 15;
+
+        Iterator<Map.Entry<Location, RadioBlock>> iterator = RadioDeviceRegistry.devices.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Location, RadioBlock> entry = iterator.next();
+            Location loc = entry.getKey();
+
+            if (!loc.getWorld().getName().equals(worldName)) continue;
+
+            int x = loc.getBlockX();
+            int z = loc.getBlockZ();
+
+            if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
+                entry.getValue().remove();
+                iterator.remove();
+                PlasmoRadio.log("удалил "+entry.getClass());
+            }
+        }
+    }
 
     public static byte[] changeVolume(byte[] encryptedInput, float volume) {
         try {

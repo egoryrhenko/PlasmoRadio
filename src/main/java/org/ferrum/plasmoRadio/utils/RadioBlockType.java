@@ -1,12 +1,13 @@
 package org.ferrum.plasmoRadio.utils;
 
-public enum BlockType {
+public enum RadioBlockType {
     Microphone((byte) 0),
-    Speaker((byte) 1);
+    Speaker((byte) 1),
+    Locator((byte) 2);
 
     private final byte id;
 
-    BlockType(byte id) {
+    RadioBlockType(byte id) {
         this.id = id;
     }
 
@@ -14,8 +15,8 @@ public enum BlockType {
         return id;
     }
 
-    public static BlockType fromId(byte id) {
-        for (BlockType type : values()) {
+    public static RadioBlockType fromId(byte id) {
+        for (RadioBlockType type : values()) {
             if (type.id == id) return type;
         }
         throw new IllegalArgumentException("Unknown BlockType id: " + id);

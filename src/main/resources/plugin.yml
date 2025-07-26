@@ -7,10 +7,10 @@ commands:
   test:
     description: "Управление радио"
     usage: /test
-  anvil:
+  check:
     description: "хухйху"
     usage: /anvil
-  change:
+  fix:
     description: "da"
 
 depend:
