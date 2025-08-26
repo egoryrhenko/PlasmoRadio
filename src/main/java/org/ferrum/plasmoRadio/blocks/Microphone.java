@@ -11,8 +11,9 @@ import java.util.HashSet;
 
 public class Microphone extends RadioBlock {
 
-    public Microphone(Location location) {
+    public Microphone(Location location, float frequency) {
         this.location = location;
+        this.frequency = frequency;
         update();
     }
 

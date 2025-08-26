@@ -7,9 +7,10 @@ import org.ferrum.plasmoRadio.blocks.Speaker;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RadioDeviceRegistry {
-    public static HashMap<Location, RadioBlock> devices = new HashMap<>();
+    public static ConcurrentHashMap<Location, RadioBlock> devices = new ConcurrentHashMap<>();
 
     public static void register(Location loc, RadioBlock radioBlock) {
         devices.put(loc, radioBlock);

@@ -37,11 +37,11 @@ public class ItemUtil {
         switch (blockType) {
             case Speaker -> {
                 meta.setPlayerProfile(profileSpeaker);
-                meta.displayName(Component.text("Speaker", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false));
+                meta.displayName(Component.text("Динамик", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false));
             }
             case Microphone -> {
                 meta.setPlayerProfile(profileMicrophone);
-                meta.displayName(Component.text("Microphone", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false));
+                meta.displayName(Component.text("Микрофон", NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false));
             }
             case Locator -> {
                 meta.setPlayerProfile(profileLocator);

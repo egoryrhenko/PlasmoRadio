@@ -29,34 +29,6 @@ public class RadioManager {
 
     }
 
-
-    public static ServerActivation.PlayerActivationListener onActivation() {
-        return (player, packet) -> {
-            Location loc = Bukkit.getPlayer(player.getInstance().getUuid()).getLocation();
-            for (Microphone microphone : RadioDeviceRegistry.getMicrophones()) {
-                if (!loc.getWorld().equals(microphone.location.getWorld())) {
-                    continue;
-                }
-                if (loc.distanceSquared(microphone.location) < 4) {
-                    for (RadioBlock radioBlock : microphone.devices) {
-                        radioBlock.test(player, packet);
-                    }
-                }
-
-            }
-            return ServerActivation.Result.IGNORED;
-        };
-    }
-
-    public static ServerActivation.PlayerActivationEndListener onActivationEnd() {
-        return (player, packet) -> {
-            for (Speaker speaker : RadioDeviceRegistry.getSpeakers()) {
-                speaker.removeSource(player.getInstance().getUuid());
-            }
-            return ServerActivation.Result.IGNORED;
-        };
-    }
-
     public static void unloadChunk(Chunk chunk) {
         String worldName = chunk.getWorld().getName();
         int minX = chunk.getX() << 4;
@@ -77,7 +49,6 @@ public class RadioManager {
             if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
                 entry.getValue().remove();
                 iterator.remove();
-                PlasmoRadio.log("удалил "+entry.getClass());
             }
         }
     }

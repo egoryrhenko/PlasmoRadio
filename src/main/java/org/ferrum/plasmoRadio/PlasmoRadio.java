@@ -28,17 +28,11 @@ public final class PlasmoRadio extends JavaPlugin {
     @Override
     public void onEnable() {
         plugin = this;
-        logger = getLogger();
 
         DatabaseManager.init();
 
         blockTypeKey = new NamespacedKey(this, "block_type");
         frequencyKey = new NamespacedKey(this, "frequency");
-
-        addon = new RadioAddon();
-        log(addon.toString());
-
-        PlasmoVoiceServer.getAddonsLoader().load(addon);
 
         ItemUtil.init();
 
@@ -57,7 +51,11 @@ public final class PlasmoRadio extends JavaPlugin {
 
     @Override
     public void onLoad() {
-
+        logger = getLogger();
+        addon = new RadioAddon();
+        log(addon.toString());
+        PlasmoVoiceServer.getAddonsLoader().load(addon);
+        log("Произаол загруз");
     }
 
     @Override

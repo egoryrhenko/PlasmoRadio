@@ -21,9 +21,13 @@ public class SourceListener {
             }
 
             SourceAudioPacket packet = event.getPacket();
+            Location loc = getLocation(staticSource.getPosition());
 
             for (Microphone microphone : RadioDeviceRegistry.getMicrophones()) {
-                if (getLocation(staticSource.getPosition()).distanceSquared(microphone.location) < 4) {
+                if (!loc.getWorld().equals(microphone.location.getWorld())) {
+                    continue;
+                }
+                if (loc.distanceSquared(microphone.location) < 4) {
                     for (RadioBlock radioBlock : microphone.devices) {
                         radioBlock.test(staticSource, packet);
                     }

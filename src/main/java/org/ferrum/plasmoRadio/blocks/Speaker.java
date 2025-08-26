@@ -24,8 +24,9 @@ public class Speaker extends RadioBlock {
     public HashMap<UUID, ServerStaticSource> sourceByUUID = new HashMap<>();
     public static HashSet<ServerStaticSource> sourcesList = new HashSet<>();
 
-    public Speaker(Location location) {
+    public Speaker(Location location, float frequency) {
         this.location = location;
+        this.frequency = frequency;
 
         McServerWorld world = RadioAddon.staticVoiceServer.getMinecraftServer()
                 .getWorlds()
@@ -104,7 +105,7 @@ public class Speaker extends RadioBlock {
         for (Microphone microphone : RadioDeviceRegistry.getMicrophones()) {
             if (microphone.devices.contains(this)) {
                 microphone.devices.remove(this);
-                PlasmoRadio.log("remove fo delete");
+                //PlasmoRadio.log("remove fo delete");
             }
         }
         sourceByUUID.values().forEach(

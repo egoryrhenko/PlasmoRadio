@@ -38,6 +38,7 @@ public class DatabaseManager {
                         y INTEGER,
                         z INTEGER,
                         block_type TINYINT,
+                        frequency REAL,
                         PRIMARY KEY (world, x, y, z)
                     );
                 """);
@@ -48,8 +49,8 @@ public class DatabaseManager {
         }
     }
 
-    public static void saveBlock(Location loc, byte blockType) {
-        String sql = "REPLACE INTO radio_location (world, x, y, z, block_type) VALUES (?, ?, ?, ?, ?)";
+    public static void saveBlock(Location loc, byte blockType, float frequency) {
+        String sql = "REPLACE INTO radio_location (world, x, y, z, block_type, frequency) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
@@ -58,6 +59,7 @@ public class DatabaseManager {
             stmt.setInt(3, loc.getBlockY());
             stmt.setInt(4, loc.getBlockZ());
             stmt.setByte(5, blockType);
+            stmt.setFloat(6, frequency);
 
             stmt.executeUpdate();
 
@@ -89,7 +91,7 @@ public class DatabaseManager {
 
     public static void loadBlocksInChunk(Chunk chunk) {
 
-        String sql = "SELECT x, y, z, block_type FROM radio_location WHERE world = ? AND x BETWEEN ? AND ? AND z BETWEEN ? AND ?";
+        String sql = "SELECT x, y, z, block_type, frequency FROM radio_location WHERE world = ? AND x BETWEEN ? AND ? AND z BETWEEN ? AND ?";
         int minX = chunk.getX() << 4;
         int maxX = minX + 15;
         int minZ = chunk.getZ() << 4;
@@ -115,16 +117,16 @@ public class DatabaseManager {
 
                     switch (blockType) {
                         case Speaker -> {
-                            RadioDeviceRegistry.register(loc, new Speaker(loc));
-                            PlasmoRadio.log("загружен спик");
+                            RadioDeviceRegistry.register(loc, new Speaker(loc, rs.getFloat("frequency")));
+                            //PlasmoRadio.log("загружен спик");
                         }
                         case Microphone -> {
-                            RadioDeviceRegistry.register(loc, new Microphone(loc));
-                            PlasmoRadio.log("загружен мик");
+                            RadioDeviceRegistry.register(loc, new Microphone(loc, rs.getFloat("frequency")));
+                            //PlasmoRadio.log("загружен мик");
                         }
                         case Locator -> {
-                            RadioDeviceRegistry.register(loc, new Locator(loc));
-                            PlasmoRadio.log("загружен locator");
+                            RadioDeviceRegistry.register(loc, new Locator(loc, rs.getFloat("frequency")));
+                            //PlasmoRadio.log("загружен locator");
                         }
                     }
                 }

@@ -10,27 +10,29 @@ import org.ferrum.plasmoRadio.DatabaseManager;
 import org.ferrum.plasmoRadio.PlasmoRadio;
 import org.ferrum.plasmoRadio.RadioManager;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class ChunkLoadListener implements Listener {
 
-    public static int CountLoadTask;
-    public static int CountUnloadTask;
+    public static final AtomicInteger CountLoadTask = new AtomicInteger(0);
+    public static final AtomicInteger CountUnloadTask = new AtomicInteger(0);
 
 
     @EventHandler
     public void onChunkLoad(ChunkLoadEvent event) {
         Bukkit.getScheduler().runTaskAsynchronously(PlasmoRadio.plugin, () -> {
-            CountLoadTask = CountLoadTask + 1;
+            CountLoadTask.incrementAndGet();
             DatabaseManager.loadBlocksInChunk(event.getChunk());
-            CountLoadTask = CountLoadTask - 1;
+            CountLoadTask.decrementAndGet();
         });
     }
 
     @EventHandler
     public void onChunkUnload(ChunkUnloadEvent event) {
         Bukkit.getScheduler().runTaskAsynchronously(PlasmoRadio.plugin, () -> {
-            CountUnloadTask++;
+            CountUnloadTask.incrementAndGet();
             RadioManager.unloadChunk(event.getChunk());
-            CountUnloadTask--;
+            CountUnloadTask.decrementAndGet();
         });
     }
 }
