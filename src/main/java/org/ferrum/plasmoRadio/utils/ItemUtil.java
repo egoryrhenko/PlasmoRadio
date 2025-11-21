@@ -27,7 +27,11 @@ public class ItemUtil {
         profileLocator.setProperty(new ProfileProperty("textures", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYmMxODMxMjZhYjBhZGFlMzJiZThhZGEyNGZlZWNjMWY5ODJjYjM3MjMzMTM4Y2RkYzYwM2ViY2VhNGY2NWYxZiJ9fX0="));
     }
 
-    public static ItemStack createCustomBlock(RadioBlockType blockType, float frequency) {
+    public static ItemStack getRadioItemStack(RadioBlockType blockType) {
+        return getRadioItemStack(blockType, 100);
+    }
+
+    public static ItemStack getRadioItemStack(RadioBlockType blockType, float frequency) {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) skull.getItemMeta();
 

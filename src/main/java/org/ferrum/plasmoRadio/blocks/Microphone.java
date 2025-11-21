@@ -1,48 +1,31 @@
 package org.ferrum.plasmoRadio.blocks;
 
 import org.bukkit.Location;
-import org.ferrum.plasmoRadio.utils.RadioDeviceRegistry;
-import su.plo.voice.api.server.audio.source.ServerStaticSource;
-import su.plo.voice.api.server.player.VoicePlayer;
-import su.plo.voice.proto.packets.udp.clientbound.SourceAudioPacket;
-import su.plo.voice.proto.packets.udp.serverbound.PlayerAudioPacket;
+import org.ferrum.plasmoRadio.managers.DatabaseManager;
 
-import java.util.HashSet;
+import java.util.Map;
 
 public class Microphone extends RadioBlock {
 
-    public Microphone(Location location, float frequency) {
+    public Microphone(Location location) {
         this.location = location;
-        this.frequency = frequency;
-        update();
+        frequency = 100f;
     }
 
-    public HashSet<RadioBlock> devices = new HashSet<>();
-
-    @Override
-    public void update() {
-        devices.clear();
-        for (RadioBlock radioBlock: RadioDeviceRegistry.devices.values()) {
-            if (radioBlock instanceof Microphone) {
-                continue;
-            }
-            if (radioBlock.frequency == frequency) {
-                devices.add(radioBlock);
-            }
-        }
+    public Microphone(Location location, Map<String, String> options){
+        this.location = location;
+        loadOptions(options);
     }
 
     @Override
-    public void test(VoicePlayer player, PlayerAudioPacket packet) {
-
+    public void changeFrequency(Float newFrequency) {
+        newFrequency = validFrequency(newFrequency);
+        frequency = newFrequency;
+        saveOptions();
     }
-    @Override
-    public void test(ServerStaticSource staticSource, SourceAudioPacket packet) {
 
-    }
     @Override
     public void remove() {
-        devices.clear();
-    }
 
+    }
 }

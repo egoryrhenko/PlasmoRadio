@@ -1,14 +1,13 @@
-package org.ferrum.plasmoRadio.listeners;
+package org.ferrum.plasmoRadio.listeners.bukkit;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.event.world.ChunkUnloadEvent;
-import org.ferrum.plasmoRadio.DatabaseManager;
+import org.ferrum.plasmoRadio.managers.DatabaseManager;
 import org.ferrum.plasmoRadio.PlasmoRadio;
-import org.ferrum.plasmoRadio.RadioManager;
+import org.ferrum.plasmoRadio.managers.RadioManager;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

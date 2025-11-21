@@ -2,7 +2,6 @@ package org.ferrum.plasmoRadio.blocks;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,27 +18,18 @@ import su.plo.voice.api.server.player.VoicePlayer;
 import su.plo.voice.proto.packets.udp.clientbound.SourceAudioPacket;
 import su.plo.voice.proto.packets.udp.serverbound.PlayerAudioPacket;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 
-public class Locator extends RadioBlock {
+public class Locator extends ReceiveRadioBlock {
 
-    public Locator(Location location, float frequency) {
+    public Locator(Location location) {
         this.location = location;
-        this.frequency = frequency;
-        update();
+        setFrequency(100f);
     }
-    @Override
-    public void update() {
-        for (Microphone microphone : RadioDeviceRegistry.getMicrophones()) {
-            if (microphone.devices.contains(this) && microphone.frequency != this.frequency) {
-                microphone.devices.remove(this);
-            }
-            if (!microphone.devices.contains(this) && microphone.frequency == this.frequency) {
-                microphone.devices.add(this);
-            }
-        }
+
+    public Locator(Location location, Map<String, String> options) {
+        this.location = location;
+        loadOptions(options);
     }
 
     private final Map<UUID, LocatorLog> locatorLogs = new HashMap<>();
@@ -56,14 +46,13 @@ public class Locator extends RadioBlock {
                 meta.setPlayerProfile(offlinePlayer.getPlayerProfile());
                 Location loc = entry.getValue().location;
                 meta.lore(List.of(
-                        Component.text("Объект: " + player.getName(), NamedTextColor.WHITE),
+                        Component.text( "Объект: " + offlinePlayer.getName(), NamedTextColor.WHITE),
                         Component.text("Координаты: " + loc.getX() + " " + loc.getY() + " " + loc.getZ(), NamedTextColor.WHITE),
                         Component.text("Мир: " + loc.getWorld().getName(), NamedTextColor.WHITE),
                         Component.text("Время: " + getFormatTime(System.currentTimeMillis() - entry.getValue().timestamp) + " назад", NamedTextColor.WHITE)
                 ));
             } else {
                 meta.displayName(Component.text("Пластинка").decoration(TextDecoration.ITALIC,false));
-                //meta.setPlayerProfile(player.getPlayerProfile());
                 Location loc = entry.getValue().location;
                 meta.lore(List.of(
                         Component.text("Объект: Пластинка", NamedTextColor.WHITE),
@@ -79,25 +68,21 @@ public class Locator extends RadioBlock {
     }
 
     @Override
-    public void test(VoicePlayer player, PlayerAudioPacket packet) {
+    public void receivePackage(VoicePlayer player, PlayerAudioPacket packet) {
         OfflinePlayer bukkitPlayer = Bukkit.getOfflinePlayer(player.getInstance().getUuid());
         LocatorLog log = new LocatorLog(bukkitPlayer.getLocation(), System.currentTimeMillis());
         locatorLogs.put(bukkitPlayer.getUniqueId(), log);
     }
 
     @Override
-    public void test(ServerStaticSource staticSource, SourceAudioPacket packet) {
+    public void receivePackage(ServerStaticSource staticSource, SourceAudioPacket packet) {
         ServerPos3d loc = staticSource.getPosition();
         LocatorLog log = new LocatorLog(new Location(Bukkit.getWorld(loc.getWorld().getName()), loc.getX(), loc.getY(), loc.getZ()), System.currentTimeMillis());
         locatorLogs.put(staticSource.getId(), log);
     }
     @Override
     public void remove() {
-        for (Microphone microphone : RadioDeviceRegistry.getMicrophones()) {
-            if (microphone.devices.contains(this)) {
-                microphone.devices.remove(this);
-            }
-        }
+
     }
 
     private record LocatorLog(Location location, long timestamp) {
@@ -114,10 +99,10 @@ public class Locator extends RadioBlock {
 
         StringBuilder result = new StringBuilder();
 
-        if (days > 0) result.append(days).append(days == 1 ? " День " : " Дней ");
-        if (hours > 0) result.append(hours).append(hours == 1 ? " Час " : " Часов ");
-        if (minutes > 0) result.append(minutes).append(minutes == 1 ? " Минута " : " Минут ");
-        if (secs > 0) result.append(secs).append(secs == 1 ? " Секунду " : " Секунд ");
+        if (days > 0) result.append(days).append(days == 1 ? " День " : days < 5 ? " Дня " : " Дней ");
+        if (hours > 0) result.append(hours).append(hours == 1 ? " Час " : hours < 5 ? " Дня " : " Дней ");
+        if (minutes > 0) result.append(minutes).append(minutes == 1 ? " Минута " : minutes < 5 ? " Дня " : " Дней ");
+        if (secs > 0) result.append(secs).append(secs == 1 ? " Секунду " : secs < 5 ? " Дня " : " Дней ");
 
         if (result.isEmpty()) return "меньше секунды";
 

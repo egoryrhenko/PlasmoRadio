@@ -1,0 +1,28 @@
+
+# PlasmoRadio plugin config
+
+Recipes:
+  microphone:
+    grid_size: 3
+    shape:
+      line1: "WWW"
+      line2: "WQW"
+      line3: "ICI"
+    ingredient:
+      W: "#wool"
+      Q: "QUARTZ"
+      I: "IRON_INGOT"
+      C: "COPPER_INGOT"
+  speaker:
+    grid_size: 3
+    shape:
+      line1: "WWW"
+      line2: " CS"
+      line3: "WWW"
+    ingredient:
+      S: "#wool"
+      W: "#planks"
+      C: "COPPER_INGOT"
+
+
+

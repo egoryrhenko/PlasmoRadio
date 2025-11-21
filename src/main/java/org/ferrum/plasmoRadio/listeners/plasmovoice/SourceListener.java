@@ -1,9 +1,10 @@
-package org.ferrum.plasmoRadio.listeners;
+package org.ferrum.plasmoRadio.listeners.plasmovoice;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.ferrum.plasmoRadio.PlasmoRadio;
+import org.ferrum.plasmoRadio.managers.RadioManager;
 import org.ferrum.plasmoRadio.blocks.Microphone;
-import org.ferrum.plasmoRadio.blocks.RadioBlock;
 import org.ferrum.plasmoRadio.blocks.Speaker;
 import org.ferrum.plasmoRadio.utils.RadioDeviceRegistry;
 import su.plo.slib.api.server.position.ServerPos3d;
@@ -21,17 +22,18 @@ public class SourceListener {
             }
 
             SourceAudioPacket packet = event.getPacket();
-            Location loc = getLocation(staticSource.getPosition());
+            Location loc = getLocation(staticSource.getPosition()).add(-0.5f, -0.5, -0.5);;
 
             for (Microphone microphone : RadioDeviceRegistry.getMicrophones()) {
                 if (!loc.getWorld().equals(microphone.location.getWorld())) {
                     continue;
                 }
-                if (loc.distanceSquared(microphone.location) < 4) {
-                    for (RadioBlock radioBlock : microphone.devices) {
-                        radioBlock.test(staticSource, packet);
-                    }
+                if (loc.distanceSquared(microphone.location) > 4) {
+                    continue;
                 }
+                RadioManager.getDevices(microphone.frequency).forEach(
+                        device -> device.receivePackage(staticSource, packet)
+                );
             }
         }
     }

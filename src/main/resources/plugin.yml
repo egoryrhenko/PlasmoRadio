@@ -10,8 +10,9 @@ commands:
   check:
     description: "хухйху"
     usage: /anvil
-  fix:
+  radio:
     description: "da"
+    usage: /radio <give/reload>
 
 depend:
   - PlasmoVoice

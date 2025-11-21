@@ -1,2 +1,5 @@
+[server.pv.activation]
+radio = "Динамики"
+
 [client.pv.activation]
 radio = "Динамики"

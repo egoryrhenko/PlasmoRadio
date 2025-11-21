@@ -26,13 +26,13 @@ public class Test2 implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase()) {
             case "mic", "microphone" -> {
-                item = ItemUtil.createCustomBlock(RadioBlockType.Microphone, 0);
+                item = ItemUtil.getRadioItemStack(RadioBlockType.Microphone);
             }
             case "speaker", "radio" -> {
-                item = ItemUtil.createCustomBlock(RadioBlockType.Speaker, 0);
+                item = ItemUtil.getRadioItemStack(RadioBlockType.Speaker);
             }
             case "locator" -> {
-                item = ItemUtil.createCustomBlock(RadioBlockType.Locator, 0);
+                item = ItemUtil.getRadioItemStack(RadioBlockType.Locator);
             }
             default -> {
                 player.sendMessage("Неверный тип. Используй mic или speaker.");

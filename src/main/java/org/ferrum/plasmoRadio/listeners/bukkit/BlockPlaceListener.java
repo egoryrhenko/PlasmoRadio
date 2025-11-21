@@ -1,28 +1,35 @@
-package org.ferrum.plasmoRadio.listeners;
+package org.ferrum.plasmoRadio.listeners.bukkit;
 
 
-import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Skull;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
-import org.ferrum.plasmoRadio.DatabaseManager;
+import org.ferrum.plasmoRadio.managers.DatabaseManager;
 import org.ferrum.plasmoRadio.PlasmoRadio;
 import org.ferrum.plasmoRadio.blocks.Locator;
 import org.ferrum.plasmoRadio.blocks.Microphone;
 import org.ferrum.plasmoRadio.blocks.Speaker;
 import org.ferrum.plasmoRadio.utils.*;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class BlockPlaceListener implements Listener {
+
+    private final String defaultPassword = null;
 
 
     @EventHandler
@@ -45,12 +52,14 @@ public class BlockPlaceListener implements Listener {
         Location loc = block.getLocation();
 
         switch (type) {
-            case 0 -> RadioDeviceRegistry.register(loc, new Microphone(loc, 0f));
-            case 1 -> RadioDeviceRegistry.register(loc, new Speaker(loc, 0f));
-            case 2 -> RadioDeviceRegistry.register(loc, new Locator(loc, 0f));
+            case 0 -> RadioDeviceRegistry.register(loc, new Microphone(loc));
+            case 1 -> RadioDeviceRegistry.register(loc, new Speaker(loc));
+            case 2 -> RadioDeviceRegistry.register(loc, new Locator(loc));
         }
 
-        DatabaseManager.saveBlock(loc, type, 0f);
+        Map<String, String> options = new HashMap<>();
+        options.put("frequency", "100.0");
+        DatabaseManager.saveBlock(loc, type, options);
     }
 
     @EventHandler
@@ -59,16 +68,36 @@ public class BlockPlaceListener implements Listener {
     }
 
     @EventHandler
+    public void onBlockBreak(EntityExplodeEvent event) {
+        if (event.getEntity().getType().equals(EntityType.WIND_CHARGE)) return;
+        explode(event.blockList());
+    }
+
+    @EventHandler
     public void onBlockBreak(BlockExplodeEvent event) {
-        breakRadioBlock(event.getBlock(), false);
+        explode(event.blockList());
+    }
+
+    private void explode(List<Block> blockList) {
+        for (Block block : blockList) {
+            if (breakRadioBlock(block, true)) {
+                block.setType(Material.AIR, false);
+            }
+        }
     }
 
     @EventHandler
     public void onPistonExtend(BlockPistonExtendEvent event) {
-        for (Block block : event.getBlocks()) {
-            breakRadioBlock(block, false);
-        }
+        explode(event.getBlocks());
     }
+
+//    @EventHandler
+//    public void onBlockDrop(BlockDropItemEvent event) {
+//        Block block = event.getBlock();
+//        if (isRadioBlock(block)) {
+//            event.getItems().clear(); // удаляем весь дроп
+//        }
+//    }
 
     private boolean notHead(Block block) {
         Material type = block.getType();
@@ -89,7 +118,7 @@ public class BlockPlaceListener implements Listener {
         Location loc = block.getLocation();
 
         if (drop) {
-            block.getWorld().dropItemNaturally(block.getLocation().add(new Vector(0.5f,0.5f,0.5f)), ItemUtil.createCustomBlock(blockType,0));
+            block.getWorld().dropItemNaturally(block.getLocation().add(new Vector(0.5f,0.5f,0.5f)), ItemUtil.getRadioItemStack(blockType));
         }
 
         RadioDeviceRegistry.get(loc).remove();

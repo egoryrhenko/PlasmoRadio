@@ -1,10 +1,9 @@
 package org.ferrum.plasmoRadio.blocks;
 
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 import org.ferrum.plasmoRadio.PlasmoRadio;
 import org.ferrum.plasmoRadio.RadioAddon;
-import org.ferrum.plasmoRadio.utils.RadioDeviceRegistry;
+import org.ferrum.plasmoRadio.managers.RadioManager;
 import su.plo.slib.api.server.position.ServerPos3d;
 import su.plo.slib.api.server.world.McServerWorld;
 import su.plo.voice.api.server.audio.source.ServerAudioSource;
@@ -15,18 +14,19 @@ import su.plo.voice.proto.packets.udp.serverbound.PlayerAudioPacket;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.UUID;
 
-public class Speaker extends RadioBlock {
+public class Speaker extends ReceiveRadioBlock {
 
     public ServerPos3d pos3d;
 
     public HashMap<UUID, ServerStaticSource> sourceByUUID = new HashMap<>();
     public static HashSet<ServerStaticSource> sourcesList = new HashSet<>();
 
-    public Speaker(Location location, float frequency) {
+    public Speaker(Location location) {
         this.location = location;
-        this.frequency = frequency;
+        setFrequency(100f);
 
         McServerWorld world = RadioAddon.staticVoiceServer.getMinecraftServer()
                 .getWorlds()
@@ -36,7 +36,11 @@ public class Speaker extends RadioBlock {
                 .orElseThrow(() -> new IllegalStateException(location.getWorld().getName() + " not found"));
 
         this.pos3d = new ServerPos3d(world, location.x() + 0.5d,location.y() + .5d,location.z() + .5d);
-        update();
+    }
+
+    public Speaker(Location location, Map<String, String> options) {
+        this(location);
+        loadOptions(options);
     }
 
     public ServerStaticSource getSource(UUID uuid) {
@@ -50,29 +54,8 @@ public class Speaker extends RadioBlock {
         return staticSource;
     }
 
-    public void removeSource(UUID uuid) {
-        ServerStaticSource source = getSource(uuid);
-        source.remove();
-        sourceByUUID.remove(uuid);
-        sourcesList.add(source);
-    }
-
     @Override
-    public void update() {
-        for (Microphone microphone : RadioDeviceRegistry.getMicrophones()) {
-            if (microphone.devices.contains(this) && microphone.frequency != this.frequency) {
-                microphone.devices.remove(this);
-                PlasmoRadio.log("remove s");
-            }
-            if (!microphone.devices.contains(this) && microphone.frequency == this.frequency) {
-                microphone.devices.add(this);
-                PlasmoRadio.log("add s");
-            }
-        }
-    }
-
-    @Override
-    public void test(VoicePlayer player, PlayerAudioPacket packet) {
+    public void receivePackage(VoicePlayer player, PlayerAudioPacket packet) {
         ServerStaticSource source = getSource(player.getInstance().getUuid());
         source.sendAudioPacket(
                 new SourceAudioPacket(
@@ -87,7 +70,7 @@ public class Speaker extends RadioBlock {
     }
 
     @Override
-    public void test(ServerStaticSource staticSource, SourceAudioPacket packet) {
+    public void receivePackage(ServerStaticSource staticSource, SourceAudioPacket packet) {
         ServerStaticSource source = getSource(staticSource.getId());
         source.sendAudioPacket(
                 new SourceAudioPacket(
@@ -102,12 +85,7 @@ public class Speaker extends RadioBlock {
     }
     @Override
     public void remove() {
-        for (Microphone microphone : RadioDeviceRegistry.getMicrophones()) {
-            if (microphone.devices.contains(this)) {
-                microphone.devices.remove(this);
-                //PlasmoRadio.log("remove fo delete");
-            }
-        }
+        RadioManager.getDevices(frequency).remove(this);
         sourceByUUID.values().forEach(
                 ServerAudioSource::remove
         );

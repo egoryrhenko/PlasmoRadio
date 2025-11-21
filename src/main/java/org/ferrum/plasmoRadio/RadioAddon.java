@@ -1,7 +1,8 @@
 package org.ferrum.plasmoRadio;
 
-import org.ferrum.plasmoRadio.listeners.ActivationListener;
-import org.ferrum.plasmoRadio.listeners.SourceListener;
+import org.ferrum.plasmoRadio.listeners.plasmovoice.ActivationListener;
+import org.ferrum.plasmoRadio.listeners.plasmovoice.PlayerConnectListener;
+import org.ferrum.plasmoRadio.listeners.plasmovoice.SourceListener;
 import su.plo.voice.api.addon.AddonInitializer;
 import su.plo.voice.api.addon.InjectPlasmoVoice;
 import su.plo.voice.api.addon.annotation.Addon;
@@ -45,16 +46,18 @@ public final class RadioAddon implements AddonInitializer {
 
         voiceServer.getEventBus().register(this, new SourceListener());
 
+        voiceServer.getEventBus().register(this, new PlayerConnectListener());
+
         File addonFolder = new File(voiceServer.getMinecraftServer().getConfigsFolder(), "radio");
 
         voiceServer.getLanguages().register(
                 this::getLanguageResource,
                 new File(addonFolder, "languages") // folder where to store languages
         );
-
         PlasmoRadio.log("[===================]");
         PlasmoRadio.log("[ Addon initialized ]");
         PlasmoRadio.log("[===================]");
+
     }
 
     public ServerSourceLine getSourceLine() {
@@ -68,6 +71,6 @@ public final class RadioAddon implements AddonInitializer {
     }
 
     private InputStream getLanguageResource(String resourcePath) throws IOException {
-        return getClass().getClassLoader().getResourceAsStream(String.format("pv-addon-radio/%s", resourcePath));
+        return getClass().getClassLoader().getResourceAsStream(String.format("radio/%s", resourcePath));
     }
 }
