@@ -47,23 +47,22 @@ public class Speaker extends ReceiveRadioBlock {
     }
 
     public ServerStaticSource getSource(UUID uuid) {
-        if (testSource == null) {
-            testSource = RadioAddon.sourceLine.createStaticSource(pos3d, true);
-            sourcesList.add(testSource);
-        }
-        return testSource;
-//        return sourceByUUID.computeIfAbsent(uuid, id -> {
-//            ServerStaticSource staticSource = RadioAddon.sourceLine.createStaticSource(pos3d, false);
-//            staticSource.setIconVisible(false);
-//            sourcesList.add(staticSource);
-//            return staticSource;
-//        });
+//        if (testSource == null) {
+//            testSource = RadioAddon.sourceLine.createStaticSource(pos3d, true);
+//            sourcesList.add(testSource);
+//        }
+//        return testSource;
+        return sourceByUUID.computeIfAbsent(uuid, id -> {
+            ServerStaticSource staticSource = RadioAddon.sourceLine.createStaticSource(pos3d, false);
+            staticSource.setIconVisible(false);
+            sourcesList.add(staticSource);
+            return staticSource;
+        });
     }
 
     @Override
     public void receivePackage(VoicePlayer player, byte[] data, long sequenceNumber) {
         ServerStaticSource source = getSource(player.getInstance().getUuid());
-        System.out.println(source.getState());
         source.sendAudioFrame(
                 data,
                 sequenceNumber,
