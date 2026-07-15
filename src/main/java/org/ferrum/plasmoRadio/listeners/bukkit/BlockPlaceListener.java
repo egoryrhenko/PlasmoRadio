@@ -16,7 +16,7 @@ import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
-import org.ferrum.plasmoRadio.managers.DatabaseManager;
+import org.ferrum.plasmoRadio.managers.ChunkStorageManager;
 import org.ferrum.plasmoRadio.PlasmoRadio;
 import org.ferrum.plasmoRadio.blocks.Locator;
 import org.ferrum.plasmoRadio.blocks.Microphone;
@@ -59,7 +59,7 @@ public class BlockPlaceListener implements Listener {
 
         Map<String, String> options = new HashMap<>();
         options.put("frequency", "100.0");
-        DatabaseManager.saveBlock(loc, type, options);
+        ChunkStorageManager.saveBlock(loc, RadioBlockType.fromId(type), options);
     }
 
     @EventHandler
@@ -75,6 +75,7 @@ public class BlockPlaceListener implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockExplodeEvent event) {
+        if (event.getExplodedBlockState().getType().equals(Material.AIR)) return;
         explode(event.blockList());
     }
 
@@ -123,7 +124,7 @@ public class BlockPlaceListener implements Listener {
 
         RadioDeviceRegistry.get(loc).remove();
         RadioDeviceRegistry.unregister(loc);
-        DatabaseManager.removeBlock(loc);
+        ChunkStorageManager.removeBlock(loc);
         return true;
     }
 }

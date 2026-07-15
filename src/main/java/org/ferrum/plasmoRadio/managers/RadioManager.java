@@ -5,39 +5,22 @@ import org.bukkit.Location;
 import org.ferrum.plasmoRadio.blocks.RadioBlock;
 import org.ferrum.plasmoRadio.blocks.ReceiveRadioBlock;
 import org.ferrum.plasmoRadio.utils.RadioDeviceRegistry;
-//import su.plo.voice.api.audio.codec.AudioDecoder;
-//import su.plo.voice.api.audio.codec.AudioEncoder;
-//import su.plo.voice.api.encryption.Encryption;
-//import su.plo.voice.api.server.audio.capture.ServerActivation;
-//import su.plo.voice.api.server.audio.source.ServerStaticSource;
-//import su.plo.voice.proto.packets.udp.clientbound.SourceAudioPacket;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RadioManager {
 
-    public static HashMap<Float, HashSet<ReceiveRadioBlock>> devicesFoFrequency = new HashMap<>();
-
-    //private static Encryption encryption;
-    //private static AudioDecoder decoder;
-    //private static AudioEncoder encoder;
-
-    public static void init() {
-        //encryption = RadioAddon.getVoiceServer.getDefaultEncryption();
-        //decoder = RadioAddon.getVoiceServer.createOpusDecoder(false);
-        //encoder = RadioAddon.getVoiceServer.createOpusEncoder(false);
-
-    }
-
+    public static final ConcurrentHashMap<Float, HashSet<ReceiveRadioBlock>> devicesFoFrequency = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<Float, String> passwordFoFrequency = new ConcurrentHashMap<>();
 
     public static HashSet<ReceiveRadioBlock> getDevices(Float frequency) {
-        if (devicesFoFrequency.containsKey(frequency)) {
-            return devicesFoFrequency.get(frequency);
-        }
-        return new HashSet<>();
+        HashSet<ReceiveRadioBlock> devices = devicesFoFrequency.get(frequency);
+        return devices != null ? devices : new HashSet<>();
     }
-
-
 
     public static void unloadChunk(Chunk chunk) {
         String worldName = chunk.getWorld().getName();
@@ -46,9 +29,8 @@ public class RadioManager {
         int minZ = chunk.getZ() << 4;
         int maxZ = minZ + 15;
 
-        Iterator<Map.Entry<Location, RadioBlock>> iterator = RadioDeviceRegistry.devices.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<Location, RadioBlock> entry = iterator.next();
+        List<Location> toRemove = new ArrayList<>();
+        for (Map.Entry<Location, RadioBlock> entry : RadioDeviceRegistry.devices.entrySet()) {
             Location loc = entry.getKey();
 
             if (!loc.getWorld().getName().equals(worldName)) continue;
@@ -58,46 +40,12 @@ public class RadioManager {
 
             if (x >= minX && x <= maxX && z >= minZ && z <= maxZ) {
                 entry.getValue().remove();
-                iterator.remove();
+                toRemove.add(loc);
             }
         }
-    }
 
-//    public static byte[] changeVolume(byte[] encryptedInput, float volume) {
-//        try {
-//            // Decode Opus -> PCM
-//            short[] pcm = decoder.decode(encryption.decrypt(encryptedInput));
-//
-//            for (int i = 0 ; i < pcm.length ; i++) {
-//                pcm[i] = (short) (pcm[i] * volume);
-//            }
-//
-//            //oldRadioEffect(pcm);
-//
-//            // Encrypt
-//            return encryption.encrypt(encoder.encode(pcm));
-//        } catch (Exception e) {
-//            PlasmoRadio.log(e.getMessage());
-//            return encryptedInput; // fallback — возвращаем оригинал если ошибка
-//        }
-//    }
-//
-//    public static void oldRadioEffect(short[] pcm) {
-//        // Downsampling (упрощённо)
-//        int downsampleFactor = 4;
-//        for (int i = 0; i < pcm.length; i += downsampleFactor) {
-//            short sample = pcm[i];
-//            // Клиппинг
-//            if (sample > 20000) sample = 20000;
-//            if (sample < -20000) sample = -20000;
-//            // Нелинейное искажение
-//            float s = sample / 32768f;
-//            s = (float) Math.tanh(s * 3.0);
-//            pcm[i] = (short) (s * 32767);
-//
-//            // Добавим шум
-//            int noise = (int) ((Math.random() - 0.5) * 200); // шум +-100
-//            pcm[i] = (short) Math.max(Math.min(pcm[i] + noise, Short.MAX_VALUE), Short.MIN_VALUE);
-//        }
-//    }
+        for (Location loc : toRemove) {
+            RadioDeviceRegistry.unregister(loc);
+        }
+    }
 }

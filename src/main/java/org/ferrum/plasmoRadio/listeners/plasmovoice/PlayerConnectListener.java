@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.ferrum.plasmoRadio.PlasmoRadio;
+import org.ferrum.plasmoRadio.utils.Scheduler;
 import su.plo.voice.api.event.EventSubscribe;
 import su.plo.voice.api.server.event.connection.UdpClientConnectEvent;
 
@@ -25,7 +26,7 @@ public class PlayerConnectListener {
         for (String key : recipeKeys) {
             NamespacedKey recipe = new NamespacedKey(PlasmoRadio.plugin, key);
             if (!player.hasDiscoveredRecipe(recipe)) {
-                player.discoverRecipe(recipe);
+                Scheduler.run(() -> player.discoverRecipe(recipe));
             }
         }
     }

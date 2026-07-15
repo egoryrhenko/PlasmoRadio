@@ -1,28 +1,31 @@
 package org.ferrum.plasmoRadio.blocks;
 
 import org.bukkit.Location;
-import org.ferrum.plasmoRadio.PlasmoRadio;
 import org.ferrum.plasmoRadio.RadioAddon;
+import org.ferrum.plasmoRadio.managers.ConfigManager;
 import org.ferrum.plasmoRadio.managers.RadioManager;
+import org.ferrum.plasmoRadio.utils.RadioEffectProcessor;
 import su.plo.slib.api.server.position.ServerPos3d;
 import su.plo.slib.api.server.world.McServerWorld;
+import su.plo.voice.api.server.audio.capture.PlayerActivationInfo;
 import su.plo.voice.api.server.audio.source.ServerAudioSource;
 import su.plo.voice.api.server.audio.source.ServerStaticSource;
 import su.plo.voice.api.server.player.VoicePlayer;
 import su.plo.voice.proto.packets.udp.clientbound.SourceAudioPacket;
 import su.plo.voice.proto.packets.udp.serverbound.PlayerAudioPacket;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Speaker extends ReceiveRadioBlock {
 
     public ServerPos3d pos3d;
 
-    public HashMap<UUID, ServerStaticSource> sourceByUUID = new HashMap<>();
-    public static HashSet<ServerStaticSource> sourcesList = new HashSet<>();
+    public final ConcurrentHashMap<UUID, ServerStaticSource> sourceByUUID = new ConcurrentHashMap<>();
+    public static final Set<ServerStaticSource> sourcesList = ConcurrentHashMap.newKeySet();
+    private ServerStaticSource testSource;
 
     public Speaker(Location location) {
         this.location = location;
@@ -35,7 +38,7 @@ public class Speaker extends ReceiveRadioBlock {
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException(location.getWorld().getName() + " not found"));
 
-        this.pos3d = new ServerPos3d(world, location.x() + 0.5d,location.y() + .5d,location.z() + .5d);
+        this.pos3d = new ServerPos3d(world, location.x() + 0.5d, location.y() + .5d, location.z() + .5d);
     }
 
     public Speaker(Location location, Map<String, String> options) {
@@ -44,52 +47,45 @@ public class Speaker extends ReceiveRadioBlock {
     }
 
     public ServerStaticSource getSource(UUID uuid) {
-        ServerStaticSource staticSource = sourceByUUID.get(uuid);
-        if (staticSource == null) {
-            staticSource = RadioAddon.sourceLine.createStaticSource(pos3d,false);
-            staticSource.setIconVisible(false);
-            sourceByUUID.put(uuid, staticSource);
-            sourcesList.add(staticSource);
+        if (testSource == null) {
+            testSource = RadioAddon.sourceLine.createStaticSource(pos3d, true);
+            sourcesList.add(testSource);
         }
-        return staticSource;
+        return testSource;
+//        return sourceByUUID.computeIfAbsent(uuid, id -> {
+//            ServerStaticSource staticSource = RadioAddon.sourceLine.createStaticSource(pos3d, false);
+//            staticSource.setIconVisible(false);
+//            sourcesList.add(staticSource);
+//            return staticSource;
+//        });
     }
 
     @Override
-    public void receivePackage(VoicePlayer player, PlayerAudioPacket packet) {
+    public void receivePackage(VoicePlayer player, byte[] data, long sequenceNumber) {
         ServerStaticSource source = getSource(player.getInstance().getUuid());
-        source.sendAudioPacket(
-                new SourceAudioPacket(
-                        packet.getSequenceNumber(),
-                        (byte) source.getState(),
-                        packet.getData(),
-                        source.getId(),
-                        (short) 16
-                ),
+        System.out.println(source.getState());
+        source.sendAudioFrame(
+                data,
+                sequenceNumber,
                 (short) 16
         );
     }
 
     @Override
-    public void receivePackage(ServerStaticSource staticSource, SourceAudioPacket packet) {
+    public void receivePackage(ServerStaticSource staticSource, byte[] data, long sequenceNumber) {
         ServerStaticSource source = getSource(staticSource.getId());
-        source.sendAudioPacket(
-                new SourceAudioPacket(
-                        packet.getSequenceNumber(),
-                        (byte) source.getState(),
-                        packet.getData(),
-                        source.getId(),
-                        (short) 16
-                ),
+        source.sendAudioFrame(
+                data,
+                sequenceNumber,
                 (short) 16
         );
     }
+
     @Override
     public void remove() {
         RadioManager.getDevices(frequency).remove(this);
-        sourceByUUID.values().forEach(
-                ServerAudioSource::remove
-        );
+        sourcesList.removeAll(sourceByUUID.values());
+        sourceByUUID.values().forEach(ServerAudioSource::remove);
         sourceByUUID.clear();
     }
-
 }

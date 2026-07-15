@@ -5,27 +5,38 @@ import org.ferrum.plasmoRadio.blocks.Microphone;
 import org.ferrum.plasmoRadio.blocks.RadioBlock;
 import org.ferrum.plasmoRadio.blocks.Speaker;
 
-import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RadioDeviceRegistry {
-    public static ConcurrentHashMap<Location, RadioBlock> devices = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<Location, RadioBlock> devices = new ConcurrentHashMap<>();
+
+    // Index of microphones by chunk for fast lookup in voice events.
+    public static final ConcurrentHashMap<ChunkKey, Set<Microphone>> microphonesByChunk = new ConcurrentHashMap<>();
 
     public static void register(Location loc, RadioBlock radioBlock) {
         devices.put(loc, radioBlock);
+        if (radioBlock instanceof Microphone microphone) {
+            microphonesByChunk
+                    .computeIfAbsent(ChunkKey.from(loc), k -> ConcurrentHashMap.newKeySet())
+                    .add(microphone);
+        }
     }
 
     public static void unregister(Location location) {
-        devices.remove(location);
+        RadioBlock removed = devices.remove(location);
+        if (removed instanceof Microphone microphone) {
+            Set<Microphone> set = microphonesByChunk.get(ChunkKey.from(location));
+            if (set != null) {
+                set.remove(microphone);
+                if (set.isEmpty()) {
+                    microphonesByChunk.remove(ChunkKey.from(location));
+                }
+            }
+        }
     }
 
-    public static List<Microphone> getMicrophones() {
-        return devices.values().stream()
-                .filter(device -> device instanceof Microphone)
-                .map(device -> (Microphone) device)
-                .toList();
-    }
     public static List<Speaker> getSpeakers() {
         return devices.values().stream()
                 .filter(device -> device instanceof Speaker)

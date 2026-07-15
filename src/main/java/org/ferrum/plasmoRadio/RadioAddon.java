@@ -19,7 +19,7 @@ import java.io.InputStream;
         id = "pv-addon-radio",
         name = "Radio",
         version = "1.0.0",
-        authors = {"Egor_", "ChatGPT"}
+        authors = {"Egor_"}
 )
 public final class RadioAddon implements AddonInitializer {
 
@@ -60,17 +60,7 @@ public final class RadioAddon implements AddonInitializer {
 
     }
 
-    public ServerSourceLine getSourceLine() {
-        return voiceServer.getSourceLineManager().createBuilder(
-                this,
-                "radio", // name
-                "pv.activation.radio", // translation key
-                getClass().getResourceAsStream("/textures/logo.png"), // icon resource location
-                10 // weight
-        ).build();
-    }
-
-    private InputStream getLanguageResource(String resourcePath) throws IOException {
+    private InputStream getLanguageResource(String resourcePath) {
         return getClass().getClassLoader().getResourceAsStream(String.format("radio/%s", resourcePath));
     }
 }

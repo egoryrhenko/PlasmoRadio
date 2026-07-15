@@ -1,6 +1,12 @@
 
 # PlasmoRadio plugin config
 
+# Radio voice effect applied to speakers
+radio-effect:
+  enabled: true
+  # 0.0 = original sound, 1.0 = maximum radio distortion
+  intensity: 0.5
+
 Recipes:
   microphone:
     grid_size: 3

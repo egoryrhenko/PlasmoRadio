@@ -4,17 +4,50 @@ import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
-import org.bukkit.Bukkit;
+import org.ferrum.plasmoRadio.blocks.Microphone;
 import org.ferrum.plasmoRadio.blocks.RadioBlock;
-import org.ferrum.plasmoRadio.managers.DatabaseManager;
+
+import java.time.temporal.TemporalAmount;
 
 public class MenuHandler {
+
+    public static final int buttonWidth = 250;
+
     public static ActionButton createButton(String text, String tooltip, int width, DialogAction dialogAction) {
         return ActionButton.create(
                 Component.text(text),
                 tooltip == null ? null : Component.text(tooltip),
                 width,
-                dialogAction // просто закрывает диалог
+                dialogAction
+        );
+    }
+
+    public static ActionButton mainMenuButton(RadioBlock radioBlock) {
+        return createButton(
+                "Назад",
+                null,
+                buttonWidth,
+                DialogAction.customClick((view, audience) -> {
+                    RadioBlockMenu.showRadioBlockMenuDialog(audience, radioBlock);
+                }, ClickCallback.Options.builder().build()));
+    }
+
+    public static ActionButton soundButton(RadioBlock radioBlock) {
+        return createButton(
+                "Звук",
+                "Скоро...",
+                buttonWidth,
+                null
+
+        );
+    }
+
+    public static ActionButton passwordMenuButton(RadioBlock radioBlock) {
+        return createButton(
+                "Пароль",
+                null,
+                buttonWidth,
+                ActionHelper.openPasswordMenu(radioBlock)
         );
     }
 
@@ -22,29 +55,21 @@ public class MenuHandler {
         return createButton(
                 "Требовать пароль: " + (radioBlock.usePassword ? "Да" : "Нет"),
                 null,
-                150,
+                buttonWidth,
                 DialogAction.customClick((view, audience) -> {
-
-                    radioBlock.changeFrequency(view.getFloat("frequency"));
                     radioBlock.switchUsePassword();
-
-                    RadioBlockMenu.showRadioBlockMenuDialog(audience, radioBlock);
-                }, ClickCallback.Options.builder()
-                        .uses(1)
-                        .build())
+                    radioBlock.saveOptions();
+                    audience.showDialog(RadioBlockMenu.PasswordSettingsDialog(radioBlock));
+                }, ClickCallback.Options.builder().build())
         );
     }
 
     public static ActionButton changePasswordButton(RadioBlock radioBlock) {
         return createButton(
-                "Изменить пароль",
+                radioBlock.password == null ? "Установить пароль" : "Изменить пароль",
                 null,
-                150,
-                DialogAction.customClick((view, audience) -> {
-                    RadioBlockMenu.showChangePasswordDialog(audience, radioBlock);
-                }, ClickCallback.Options.builder()
-                        .uses(1)
-                        .build())
+                buttonWidth,
+                ActionHelper.changePassword(radioBlock)
         );
     }
 
@@ -52,7 +77,7 @@ public class MenuHandler {
         return createButton(
                 "Отмена",
                 null,
-                150,
+                buttonWidth,
                 null // просто закрывает диалог
         );
     }
@@ -61,23 +86,22 @@ public class MenuHandler {
         return createButton(
                 "Назад",
                 null,
-                150,
-                DialogAction.customClick((view, audience) -> {
-                    RadioBlockMenu.showRadioBlockMenuDialog(audience, radioBlock);
-                }, ClickCallback.Options.builder().build()
-        )// просто закрывает диалог
+                buttonWidth/2,
+                DialogAction.customClick(((response, audience) -> {
+                    audience.showDialog(RadioBlockMenu.PasswordSettingsDialog(radioBlock));
+                }), ClickCallback.Options.builder().build())
         );
     }
     public static ActionButton saveSettingsButton(RadioBlock radioBlock) {
         return createButton(
                 "Сохранить настройки",
                 null,
-                150,
+                buttonWidth,
                 DialogAction.customClick((view, audience) -> {
-                    float freq = view.getFloat("frequency");
-
-                    radioBlock.changeFrequency(freq);
-
+                    Float freq = view.getFloat("frequency");
+                    if (freq != null) {
+                        radioBlock.changeFrequency(freq);
+                    }
                 }, ClickCallback.Options.builder()
                         .uses(1)
                         .build())
@@ -88,15 +112,15 @@ public class MenuHandler {
         return createButton(
                 "Сохранить",
                 null,
-                150,
+                buttonWidth/2,
                 DialogAction.customClick((view, audience) -> {
                     String oldPassword = view.getText("old_password");
                     String newPassword = view.getText("new_password");
 
                     radioBlock.changePassword(audience, oldPassword, newPassword);
-                }, ClickCallback.Options.builder()
-                        .uses(1)
-                        .build())
+
+                    audience.showDialog(RadioBlockMenu.PasswordSettingsDialog(radioBlock));
+                }, ClickCallback.Options.builder().build())
         );
     }
 
@@ -104,7 +128,7 @@ public class MenuHandler {
         return createButton(
                 "Войти",
                 null,
-                150,
+                buttonWidth,
                 DialogAction.customClick((view, audience) -> {
                     String password = view.getText("password");
 
@@ -112,6 +136,32 @@ public class MenuHandler {
                 }, ClickCallback.Options.builder()
                         .uses(1)
                         .build())
+        );
+    }
+
+    public static ActionButton openKeySettingsButton(Microphone radioBlock) {
+        return createButton(
+                "Ключ",
+                null,
+                buttonWidth,
+                DialogAction.customClick((view, audience) -> {
+                    RadioBlockMenu.showEnterKeyDialog(audience, radioBlock);
+                }, ClickCallback.Options.builder().build())
+        );
+    }
+
+    public static ActionButton enterKeyButton(RadioBlock radioBlock) {
+        return createButton(
+                "Сохранить",
+                null,
+                buttonWidth,
+                DialogAction.customClick((view, audience) -> {
+                    if (radioBlock instanceof Microphone microphone) {
+                        microphone.key = view.getText("key");
+                        microphone.saveOptions();
+                        microphone.showSettingsMenu(audience);
+                    }
+                }, ClickCallback.Options.builder().build())
         );
     }
 }

@@ -7,9 +7,10 @@ import org.ferrum.plasmoRadio.command.RadioCommand;
 import org.ferrum.plasmoRadio.command.Test2;
 import org.ferrum.plasmoRadio.listeners.bukkit.BlockPlaceListener;
 import org.ferrum.plasmoRadio.listeners.bukkit.ChunkLoadListener;
+import org.ferrum.plasmoRadio.listeners.bukkit.LocatorMenuListener;
 import org.ferrum.plasmoRadio.listeners.bukkit.RadioClickListener;
+import org.ferrum.plasmoRadio.managers.ChunkStorageManager;
 import org.ferrum.plasmoRadio.managers.ConfigManager;
-import org.ferrum.plasmoRadio.managers.DatabaseManager;
 import org.ferrum.plasmoRadio.utils.ItemUtil;
 import su.plo.voice.api.server.PlasmoVoiceServer;
 
@@ -37,7 +38,7 @@ public final class PlasmoRadio extends JavaPlugin {
         ItemUtil.init();
         ConfigManager.loadConfig();
 
-        DatabaseManager.init();
+        ChunkStorageManager.init();
 
         RadioCommand radioCommand = new RadioCommand();
 
@@ -48,6 +49,7 @@ public final class PlasmoRadio extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BlockPlaceListener(), this);
         getServer().getPluginManager().registerEvents(new RadioClickListener(), this);
         getServer().getPluginManager().registerEvents(new ChunkLoadListener(), this);
+        getServer().getPluginManager().registerEvents(new LocatorMenuListener(), this);
     }
 
     @Override
@@ -62,7 +64,6 @@ public final class PlasmoRadio extends JavaPlugin {
     @Override
     public void onDisable() {
         PlasmoVoiceServer.getAddonsLoader().unload(addon);
-        //DatabaseManager
     }
 
     public static void log(String str) {

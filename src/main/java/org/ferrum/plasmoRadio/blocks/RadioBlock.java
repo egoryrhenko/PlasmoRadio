@@ -5,50 +5,49 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.ferrum.plasmoRadio.PlasmoRadio;
-import org.ferrum.plasmoRadio.managers.DatabaseManager;
+import org.ferrum.plasmoRadio.managers.ChunkStorageManager;
 import org.ferrum.plasmoRadio.menu.RadioBlockMenu;
-import su.plo.voice.api.server.audio.source.ServerStaticSource;
-import su.plo.voice.api.server.player.VoicePlayer;
-import su.plo.voice.proto.packets.udp.clientbound.SourceAudioPacket;
-import su.plo.voice.proto.packets.udp.serverbound.PlayerAudioPacket;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.UUID;
 
 public abstract class RadioBlock {
     public Location location;
     public float frequency;
     public String password;
     public Boolean usePassword = false;
-    private final HashSet<String> sessions = new HashSet<>();
+    protected final HashSet<UUID> sessions = new HashSet<>();
 
     public static float MIN_FREQUENCY = 80;
     public static float MAX_FREQUENCY = 140;
 
     public void openSettingsMenu(Audience audience) {
-        if (usePassword == false || password == null) {
-            RadioBlockMenu.showRadioBlockMenuDialog(audience, this);
+        if (!usePassword || password == null) {
+            showSettingsMenu(audience);
         } else {
-            if (audience instanceof Player player && sessions.contains(player.getName())) {
-
-                RadioBlockMenu.showRadioBlockMenuDialog(audience, this);
+            if (audience instanceof Player player && sessions.contains(player.getUniqueId())) {
+                showSettingsMenu(audience);
                 return;
             }
             RadioBlockMenu.showEnterPasswordDialog(audience, this);
         }
-
     }
+
+    public void showSettingsMenu(Audience audience) {
+        RadioBlockMenu.showRadioBlockMenuDialog(audience, this);
+    }
+
     public void enterPassword(Audience audience, String password) {
-        if (!this.password.equals(password)) {
+        if (this.password == null || !this.password.equals(password)) {
             audience.sendMessage(Component.text("Неверный пароль", NamedTextColor.RED));
             return;
         }
         if (audience instanceof Player player) {
-            sessions.add(player.getName());
+            sessions.add(player.getUniqueId());
         }
-        RadioBlockMenu.showRadioBlockMenuDialog(audience, this);
+        showSettingsMenu(audience);
     }
     public void changePassword(Audience audience, String oldPassword, String newPassword) {
         if (this.password != null && !this.password.equals(oldPassword)) {
@@ -56,17 +55,15 @@ public abstract class RadioBlock {
             return;
         }
 
-        if (newPassword == null) {
-            audience.sendMessage(Component.text("Не безопасный пароль", NamedTextColor.RED));
+        if (newPassword == null || newPassword.isBlank()) {
+            audience.sendMessage(Component.text("Пароль не может быть пустым", NamedTextColor.RED));
             return;
         }
         this.password = newPassword;
 
         sessions.clear();
         if (audience instanceof Player player) {
-            PlasmoRadio.log(player.getName());
-            sessions.add(player.getName());
-            PlasmoRadio.log(sessions.size() +"");
+            sessions.add(player.getUniqueId());
         }
         saveOptions();
     }
@@ -80,7 +77,7 @@ public abstract class RadioBlock {
     }
 
     public void saveOptions() {
-        DatabaseManager.updateOptions(location, getOptions());
+        ChunkStorageManager.updateOptions(location, getOptions());
     }
 
     public void loadOptions(Map<String, String> options) {
@@ -97,12 +94,11 @@ public abstract class RadioBlock {
     }
 
     public float validFrequency(float input) {
-        return Math.min(MAX_FREQUENCY, Math.max(MIN_FREQUENCY, input));
+        return Math.clamp(input, MIN_FREQUENCY, MAX_FREQUENCY);
     }
 
     public void switchUsePassword() {
         usePassword = !usePassword;
-        saveOptions();
     }
     public abstract void changeFrequency(Float newFrequency);
     public abstract void remove();

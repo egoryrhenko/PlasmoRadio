@@ -17,6 +17,9 @@ public class ConfigManager {
 
     private static FileConfiguration config;
 
+    private static volatile boolean radioEffectEnabled = false;
+    private static volatile float radioEffectIntensity = 0.0f;
+
     public static boolean loadConfig() {
         try {
 
@@ -27,6 +30,10 @@ public class ConfigManager {
 
             config = YamlConfiguration.loadConfiguration(configFile);
 
+            radioEffectEnabled = config.getBoolean("radio-effect.enabled", false);
+            radioEffectIntensity = Math.min(1.0f, Math.max(0.0f,
+                    (float) config.getDouble("radio-effect.intensity", 0.0)));
+
             loadRecipes();
 
             return true;
@@ -34,6 +41,14 @@ public class ConfigManager {
             ex.printStackTrace();
             return false;
         }
+    }
+
+    public static boolean isRadioEffectEnabled() {
+        return radioEffectEnabled;
+    }
+
+    public static float getRadioEffectIntensity() {
+        return radioEffectIntensity;
     }
 
     public static void loadRecipes() throws Exception {
